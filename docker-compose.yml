@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: redditx-postgres
+    environment:
+      POSTGRES_USER: redditx
+      POSTGRES_PASSWORD: redditx
+      POSTGRES_DB: redditx_auth
+    ports:
+      - "5433:5432"
+    volumes:
+      - redditx_postgres_data:/var/lib/postgresql
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  redditx_postgres_data:

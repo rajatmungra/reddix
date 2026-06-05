@@ -1,0 +1,9 @@
+# Ignore Maven build output
+target/
+
+# Ignore IDE settings
+.idea/
+*.iml
+.classpath
+.project
+.settings/
