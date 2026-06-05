@@ -20,6 +20,11 @@ spring:
               predicates:
                 - Path=/api/users/**
 
+            - id: community-service
+              uri: lb://community-service
+              predicates:
+                - Path=/api/communities/**
+
 app:
   jwt:
     issuer: redditx-auth-service
