@@ -1,12 +1,12 @@
 server:
-  port: 8083
+  port: 8084
 
 spring:
   application:
-    name: community-service
+    name: post-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5433/redditx_community
+    url: jdbc:postgresql://localhost:5433/redditx_post
     username: redditx
     password: redditx
 

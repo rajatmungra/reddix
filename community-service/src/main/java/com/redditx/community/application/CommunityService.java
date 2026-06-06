@@ -216,6 +216,11 @@ public class CommunityService {
         );
     }
 
+    public CommunityResponse getCommunityForInternal(String communityName) {
+        Community community = findCommunityByName(communityName);
+        return toResponse(community, Optional.empty());
+    }
+
     private String normalizeName(String name) {
         return name.trim().toLowerCase();
     }

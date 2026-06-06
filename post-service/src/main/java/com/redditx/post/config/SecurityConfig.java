@@ -1,4 +1,4 @@
-package com.redditx.community.config;
+package com.redditx.post.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +16,6 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/internal/communities/**",
                                 "/actuator/health",
                                 "/actuator/info"
                         ).permitAll()
