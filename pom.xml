@@ -20,6 +20,7 @@
         <module>eureka-server</module>
         <module>community-service</module>
         <module>post-service</module>
+        <module>comment-service</module>
     </modules>
 
     <properties>

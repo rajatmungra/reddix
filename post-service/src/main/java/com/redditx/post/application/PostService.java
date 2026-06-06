@@ -231,6 +231,32 @@ public class PostService {
         );
     }
 
+    public PostResponse getPostForInternal(UUID postId) {
+        return getPost(postId);
+    }
+
+    public void incrementCommentCount(UUID postId) {
+        Post post = postRepository.findByIdAndDeletedFalse(postId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Post not found"
+                ));
+
+        post.incrementCommentCount();
+        postRepository.save(post);
+    }
+
+    public void decrementCommentCount(UUID postId) {
+        Post post = postRepository.findByIdAndDeletedFalse(postId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Post not found"
+                ));
+
+        post.decrementCommentCount();
+        postRepository.save(post);
+    }
+
     private String normalizeCommunityName(String communityName) {
         return communityName.trim().toLowerCase();
     }
