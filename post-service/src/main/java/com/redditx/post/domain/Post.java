@@ -116,6 +116,11 @@ public class Post {
         }
     }
 
+    public void applyVoteDelta(int upvoteDelta, int downvoteDelta) {
+        this.upvoteCount = Math.max(0, this.upvoteCount + upvoteDelta);
+        this.downvoteCount = Math.max(0, this.downvoteCount + downvoteDelta);
+    }
+
     public void markDeleted() {
         this.deleted = true;
     }

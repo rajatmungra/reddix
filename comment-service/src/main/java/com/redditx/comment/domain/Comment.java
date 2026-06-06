@@ -94,6 +94,11 @@ public class Comment {
         this.content = "[deleted]";
     }
 
+    public void applyVoteDelta(int upvoteDelta, int downvoteDelta) {
+        this.upvoteCount = Math.max(0, this.upvoteCount + upvoteDelta);
+        this.downvoteCount = Math.max(0, this.downvoteCount + downvoteDelta);
+    }
+
     public boolean isAuthor(UUID userId) {
         return this.authorUserId.equals(userId);
     }

@@ -7,6 +7,7 @@ import com.redditx.post.domain.PostType;
 import com.redditx.post.dto.CreatePostRequest;
 import com.redditx.post.dto.PostResponse;
 import com.redditx.post.dto.UpdatePostRequest;
+import com.redditx.post.dto.VoteCountUpdateRequest;
 import com.redditx.post.infrastructure.PostRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -254,6 +255,18 @@ public class PostService {
                 ));
 
         post.decrementCommentCount();
+        postRepository.save(post);
+    }
+
+    public void applyVoteCountDelta(UUID postId, VoteCountUpdateRequest request) {
+        Post post = postRepository.findByIdAndDeletedFalse(postId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Post not found"
+                ));
+
+        post.applyVoteDelta(request.upvoteDelta(), request.downvoteDelta());
+
         postRepository.save(post);
     }
 

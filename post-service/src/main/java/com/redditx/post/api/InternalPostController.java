@@ -3,6 +3,7 @@ package com.redditx.post.api;
 import com.redditx.common.dto.ApiResponse;
 import com.redditx.post.application.PostService;
 import com.redditx.post.dto.PostResponse;
+import com.redditx.post.dto.VoteCountUpdateRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -59,6 +60,19 @@ public class InternalPostController {
         postService.decrementCommentCount(postId);
 
         return ApiResponse.success("Comment count decremented successfully", null);
+    }
+
+    @PostMapping("/{postId}/votes/apply-delta")
+    public ApiResponse<Void> applyVoteCountDelta(
+            @RequestHeader("X-Internal-Secret") String requestSecret,
+            @PathVariable("postId") UUID postId,
+            @RequestBody VoteCountUpdateRequest request
+    ) {
+        validateInternalSecret(requestSecret);
+
+        postService.applyVoteCountDelta(postId, request);
+
+        return ApiResponse.success("Post vote count updated successfully", null);
     }
 
     private void validateInternalSecret(String requestSecret) {

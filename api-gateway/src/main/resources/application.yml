@@ -35,6 +35,11 @@ spring:
               predicates:
                 - Path=/api/comments/**
 
+            - id: vote-service
+              uri: lb://vote-service
+              predicates:
+                - Path=/api/votes/**
+
 app:
   jwt:
     issuer: redditx-auth-service

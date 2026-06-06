@@ -5,6 +5,7 @@ import com.redditx.comment.domain.Comment;
 import com.redditx.comment.dto.CommentResponse;
 import com.redditx.comment.dto.CreateCommentRequest;
 import com.redditx.comment.dto.UpdateCommentRequest;
+import com.redditx.comment.dto.VoteCountUpdateRequest;
 import com.redditx.comment.infrastructure.CommentRepository;
 import com.redditx.common.dto.PageResponse;
 import org.springframework.data.domain.Page;
@@ -185,6 +186,28 @@ public class CommentService {
                     "Post does not exist or post-service is unavailable"
             );
         }
+    }
+
+    public CommentResponse getCommentForInternal(UUID commentId) {
+        Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Comment not found"
+                ));
+
+        return toResponse(comment);
+    }
+
+    public void applyVoteCountDelta(UUID commentId, VoteCountUpdateRequest request) {
+        Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Comment not found"
+                ));
+
+        comment.applyVoteDelta(request.upvoteDelta(), request.downvoteDelta());
+
+        commentRepository.save(comment);
     }
 
     private PageResponse<CommentResponse> toPageResponse(Page<Comment> comments) {
