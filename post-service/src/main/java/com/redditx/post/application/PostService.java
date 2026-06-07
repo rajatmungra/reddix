@@ -8,15 +8,19 @@ import com.redditx.post.dto.CreatePostRequest;
 import com.redditx.post.dto.PostResponse;
 import com.redditx.post.dto.UpdatePostRequest;
 import com.redditx.post.dto.VoteCountUpdateRequest;
+import com.redditx.post.event.PostCreatedEvent;
 import com.redditx.post.infrastructure.PostRepository;
+import com.redditx.post.outbox.OutboxService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -24,15 +28,19 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final CommunityServiceClient communityServiceClient;
+    private final OutboxService outboxService;
 
     public PostService(
             PostRepository postRepository,
-            CommunityServiceClient communityServiceClient
+            CommunityServiceClient communityServiceClient,
+            OutboxService outboxService
     ) {
         this.postRepository = postRepository;
         this.communityServiceClient = communityServiceClient;
+        this.outboxService = outboxService;
     }
 
+    @Transactional
     public PostResponse createPost(UUID currentUserId, CreatePostRequest request) {
         String communityName = normalizeCommunityName(request.communityName());
 
@@ -57,6 +65,18 @@ public class PostService {
         );
 
         Post savedPost = postRepository.save(post);
+
+        PostCreatedEvent event = new PostCreatedEvent(
+                UUID.randomUUID(),
+                savedPost.getId(),
+                savedPost.getCommunityName(),
+                savedPost.getAuthorUserId(),
+                savedPost.getTitle(),
+                savedPost.getPostType().name(),
+                Instant.now()
+        );
+
+        outboxService.savePostCreatedEvent(event);
 
         return toResponse(savedPost);
     }
