@@ -40,6 +40,11 @@ spring:
               predicates:
                 - Path=/api/votes/**
 
+            - id: feed-service
+              uri: lb://feed-service
+              predicates:
+                - Path=/api/feed/**
+
 app:
   jwt:
     issuer: redditx-auth-service

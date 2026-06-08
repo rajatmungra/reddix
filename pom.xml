@@ -22,6 +22,7 @@
         <module>post-service</module>
         <module>comment-service</module>
         <module>vote-service</module>
+        <module>feed-service</module>
     </modules>
 
     <properties>
