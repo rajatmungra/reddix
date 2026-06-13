@@ -6,6 +6,7 @@ import com.redditx.comment.dto.CreateCommentRequest;
 import com.redditx.comment.dto.UpdateCommentRequest;
 import com.redditx.common.dto.ApiResponse;
 import com.redditx.common.dto.PageResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/comments")
 public class CommentController {

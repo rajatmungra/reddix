@@ -117,6 +117,61 @@ spring:
                     redis-rate-limiter.burstCapacity: 10
                     redis-rate-limiter.requestedTokens: 1
 
+            - id: auth-service-openapi
+              uri: lb://auth-service
+              predicates:
+                - Path=/v3/api-docs/auth-service
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: user-service-openapi
+              uri: lb://user-service
+              predicates:
+                - Path=/v3/api-docs/user-service
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: community-service-openapi
+              uri: lb://community-service
+              predicates:
+                - Path=/v3/api-docs/community-service
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: post-service-openapi
+              uri: lb://post-service
+              predicates:
+                - Path=/v3/api-docs/post-service
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: comment-service-openapi
+              uri: lb://comment-service
+              predicates:
+                - Path=/v3/api-docs/comment-service
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: vote-service-openapi
+              uri: lb://vote-service
+              predicates:
+                - Path=/v3/api-docs/vote-service
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: feed-service-openapi
+              uri: lb://feed-service
+              predicates:
+                - Path=/v3/api-docs/feed-service
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: notification-service-openapi
+              uri: lb://notification-service
+              predicates:
+                - Path=/v3/api-docs/notification-service
+              filters:
+                - SetPath=/v3/api-docs
 app:
   jwt:
     issuer: redditx-auth-service
@@ -150,3 +205,26 @@ management:
 logging:
   pattern:
     level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Auth Service
+        url: /v3/api-docs/auth-service
+      - name: User Service
+        url: /v3/api-docs/user-service
+      - name: Community Service
+        url: /v3/api-docs/community-service
+      - name: Post Service
+        url: /v3/api-docs/post-service
+      - name: Comment Service
+        url: /v3/api-docs/comment-service
+      - name: Vote Service
+        url: /v3/api-docs/vote-service
+      - name: Feed Service
+        url: /v3/api-docs/feed-service
+      - name: Notification Service
+        url: /v3/api-docs/notification-service

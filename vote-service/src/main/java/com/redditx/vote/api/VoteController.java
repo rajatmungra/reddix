@@ -6,6 +6,8 @@ import com.redditx.vote.domain.VoteTargetType;
 import com.redditx.vote.dto.VoteRequest;
 import com.redditx.vote.dto.VoteResponse;
 import com.redditx.vote.dto.VoteStatusResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/votes")
 public class VoteController {
@@ -23,6 +26,7 @@ public class VoteController {
         this.voteService = voteService;
     }
 
+    @Operation(summary = "Create, update, or replace current user's vote")
     @PostMapping
     public ApiResponse<VoteResponse> vote(
             @AuthenticationPrincipal Jwt jwt,

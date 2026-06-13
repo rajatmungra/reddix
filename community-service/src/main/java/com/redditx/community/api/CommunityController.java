@@ -5,6 +5,7 @@ import com.redditx.common.dto.PageResponse;
 import com.redditx.community.application.CommunityService;
 import com.redditx.community.dto.CommunityResponse;
 import com.redditx.community.dto.CreateCommunityRequest;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/communities")
 public class CommunityController {

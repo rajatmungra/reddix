@@ -6,6 +6,8 @@ import com.redditx.post.application.PostService;
 import com.redditx.post.dto.CreatePostRequest;
 import com.redditx.post.dto.PostResponse;
 import com.redditx.post.dto.UpdatePostRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
@@ -23,6 +26,7 @@ public class PostController {
         this.postService = postService;
     }
 
+    @Operation(summary = "Create a new post")
     @PostMapping
     public ApiResponse<PostResponse> createPost(
             @AuthenticationPrincipal Jwt jwt,

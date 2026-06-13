@@ -5,12 +5,14 @@ import com.redditx.common.dto.PageResponse;
 import com.redditx.notification.application.NotificationService;
 import com.redditx.notification.dto.NotificationResponse;
 import com.redditx.notification.dto.UnreadCountResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/notifications")
 public class NotificationController {

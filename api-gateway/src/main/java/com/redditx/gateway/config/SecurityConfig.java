@@ -17,7 +17,10 @@ public class SecurityConfig {
                         .pathMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
-                                "/actuator/**"
+                                "/actuator/**",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/webjars/**"
                         ).permitAll()
                         .anyExchange().authenticated()
                 )

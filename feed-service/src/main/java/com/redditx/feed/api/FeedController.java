@@ -4,8 +4,11 @@ import com.redditx.common.dto.ApiResponse;
 import com.redditx.common.dto.PageResponse;
 import com.redditx.feed.application.FeedService;
 import com.redditx.feed.dto.FeedItemResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.web.bind.annotation.*;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/feed")
 public class FeedController {
@@ -16,6 +19,7 @@ public class FeedController {
         this.feedService = feedService;
     }
 
+    @Operation(summary = "Get home feed")
     @GetMapping
     public ApiResponse<PageResponse<FeedItemResponse>> getHomeFeed(
             @RequestParam(name="page", defaultValue = "0") int page,
