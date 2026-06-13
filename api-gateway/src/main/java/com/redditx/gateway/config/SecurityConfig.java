@@ -17,8 +17,7 @@ public class SecurityConfig {
                         .pathMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
-                                "/actuator/health",
-                                "/actuator/info"
+                                "/actuator/**"
                         ).permitAll()
                         .anyExchange().authenticated()
                 )

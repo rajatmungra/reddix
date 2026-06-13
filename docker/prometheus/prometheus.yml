@@ -1,0 +1,54 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  - job_name: "redditx-api-gateway"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["localhost:8080"]
+
+  - job_name: "redditx-eureka-server"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["localhost:8761"]
+
+  - job_name: "redditx-auth-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["localhost:8081"]
+
+  - job_name: "redditx-user-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["localhost:8082"]
+
+  - job_name: "redditx-community-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["localhost:8083"]
+
+  - job_name: "redditx-post-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["localhost:8084"]
+
+  - job_name: "redditx-comment-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["localhost:8085"]
+
+  - job_name: "redditx-vote-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["localhost:8086"]
+
+  - job_name: "redditx-feed-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["localhost:8087"]
+
+  - job_name: "redditx-notification-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["localhost:8088"]

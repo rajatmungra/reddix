@@ -1,5 +1,6 @@
 server:
   port: 8761
+  address: 0.0.0.0
 
 spring:
   application:
@@ -14,4 +15,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,prometheus

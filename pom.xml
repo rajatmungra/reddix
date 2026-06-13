@@ -23,6 +23,7 @@
         <module>comment-service</module>
         <module>vote-service</module>
         <module>feed-service</module>
+        <module>notification-service</module>
     </modules>
 
     <properties>

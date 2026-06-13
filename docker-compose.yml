@@ -31,5 +31,42 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
 
+  redis:
+    image: redis:7.4-alpine
+    container_name: redditx-redis
+    ports:
+      - "6379:6379"
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: redditx-zipkin
+    ports:
+      - "9411:9411"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: redditx-prometheus
+    network_mode: "host"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - redditx_prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: redditx-grafana
+    network_mode: "host"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - redditx_grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
 volumes:
   redditx_postgres_data:
+  redditx_prometheus_data:
+  redditx_grafana_data:

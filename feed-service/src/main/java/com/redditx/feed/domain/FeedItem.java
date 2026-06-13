@@ -72,6 +72,19 @@ public class FeedItem {
         this.ingestedAt = Instant.now();
     }
 
+    public void incrementCommentCount() {
+        this.commentCount++;
+    }
+
+    public void decrementCommentCount() {
+        if (this.commentCount > 0) {
+            this.commentCount--;
+        }
+    }
+
+    public void applyVoteDelta(int upvoteDelta, int downvoteDelta) {
+        this.score = this.score + upvoteDelta - downvoteDelta;
+    }
     public UUID getId() {
         return id;
     }

@@ -1,21 +1,27 @@
 package com.redditx.comment.application;
 
+import com.redditx.comment.client.PostResponse;
 import com.redditx.comment.client.PostServiceClient;
 import com.redditx.comment.domain.Comment;
 import com.redditx.comment.dto.CommentResponse;
 import com.redditx.comment.dto.CreateCommentRequest;
 import com.redditx.comment.dto.UpdateCommentRequest;
 import com.redditx.comment.dto.VoteCountUpdateRequest;
+import com.redditx.comment.event.CommentCreatedEvent;
+import com.redditx.comment.event.CommentDeletedEvent;
 import com.redditx.comment.infrastructure.CommentRepository;
+import com.redditx.comment.outbox.CommentOutboxService;
 import com.redditx.common.dto.PageResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -25,22 +31,27 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final PostServiceClient postServiceClient;
+    private final CommentOutboxService commentOutboxService;
 
     public CommentService(
             CommentRepository commentRepository,
-            PostServiceClient postServiceClient
+            PostServiceClient postServiceClient,
+            CommentOutboxService commentOutboxService
     ) {
         this.commentRepository = commentRepository;
         this.postServiceClient = postServiceClient;
+        this.commentOutboxService = commentOutboxService;
     }
 
+    @Transactional
     public CommentResponse createComment(
             UUID currentUserId,
             CreateCommentRequest request
     ) {
-        validatePostExists(request.postId());
+        PostResponse post = validatePostExists(request.postId());
 
         int depth = 0;
+        UUID parentCommentAuthorUserId = null;
 
         if (request.parentCommentId() != null) {
             Comment parentComment = commentRepository.findByIdAndDeletedFalse(request.parentCommentId())
@@ -57,6 +68,7 @@ public class CommentService {
             }
 
             depth = parentComment.getDepth() + 1;
+            parentCommentAuthorUserId = parentComment.getAuthorUserId();
 
             if (depth > MAX_COMMENT_DEPTH) {
                 throw new ResponseStatusException(
@@ -75,6 +87,20 @@ public class CommentService {
         );
 
         Comment savedComment = commentRepository.save(comment);
+
+        commentOutboxService.saveCommentCreatedEvent(
+                new CommentCreatedEvent(
+                        UUID.randomUUID(),
+                        savedComment.getId(),
+                        savedComment.getPostId(),
+                        post.authorUserId(),
+                        post.title(),
+                        savedComment.getAuthorUserId(),
+                        savedComment.getParentCommentId(),
+                        parentCommentAuthorUserId,
+                        savedComment.getCreatedAt()
+                )
+        );
 
         try {
             postServiceClient.incrementCommentCount(request.postId());
@@ -153,6 +179,7 @@ public class CommentService {
         return toResponse(savedComment);
     }
 
+    @Transactional
     public void deleteComment(UUID currentUserId, UUID commentId) {
         Comment comment = commentRepository.findByIdAndDeletedFalse(commentId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -169,6 +196,15 @@ public class CommentService {
 
         comment.markDeleted();
         commentRepository.save(comment);
+        commentOutboxService.saveCommentDeletedEvent(
+                new CommentDeletedEvent(
+                        UUID.randomUUID(),
+                        comment.getId(),
+                        comment.getPostId(),
+                        currentUserId,
+                        Instant.now()
+                )
+        );
 
         try {
             postServiceClient.decrementCommentCount(comment.getPostId());
@@ -177,9 +213,9 @@ public class CommentService {
         }
     }
 
-    private void validatePostExists(UUID postId) {
+    private PostResponse validatePostExists(UUID postId) {
         try {
-            postServiceClient.getPost(postId);
+            return postServiceClient.getPost(postId);
         } catch (RestClientException ex) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,

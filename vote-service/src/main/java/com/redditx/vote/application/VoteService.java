@@ -1,6 +1,8 @@
 package com.redditx.vote.application;
 
+import com.redditx.vote.client.CommentResponse;
 import com.redditx.vote.client.CommentTargetClient;
+import com.redditx.vote.client.PostResponse;
 import com.redditx.vote.client.PostTargetClient;
 import com.redditx.vote.domain.Vote;
 import com.redditx.vote.domain.VoteTargetType;
@@ -8,36 +10,49 @@ import com.redditx.vote.domain.VoteType;
 import com.redditx.vote.dto.VoteRequest;
 import com.redditx.vote.dto.VoteResponse;
 import com.redditx.vote.dto.VoteStatusResponse;
+import com.redditx.vote.event.VoteChangedEvent;
 import com.redditx.vote.infrastructure.VoteRepository;
+import com.redditx.vote.outbox.VoteOutboxService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class VoteService {
 
+    private record TargetMetadata(
+            UUID ownerUserId,
+            String title
+    ) {
+    }
+
     private final VoteRepository voteRepository;
     private final PostTargetClient postTargetClient;
     private final CommentTargetClient commentTargetClient;
+    private final VoteOutboxService voteOutboxService;
 
     public VoteService(
             VoteRepository voteRepository,
             PostTargetClient postTargetClient,
-            CommentTargetClient commentTargetClient
+            CommentTargetClient commentTargetClient,
+            VoteOutboxService voteOutboxService
     ) {
         this.voteRepository = voteRepository;
         this.postTargetClient = postTargetClient;
         this.commentTargetClient = commentTargetClient;
+        this.voteOutboxService = voteOutboxService;
     }
 
     @Transactional
     public VoteResponse vote(UUID currentUserId, VoteRequest request) {
-        validateTargetExists(request.targetType(), request.targetId());
+        TargetMetadata targetMetadata =
+                getTargetMetadata(request.targetType(), request.targetId());
 
         Optional<Vote> existingVoteOptional =
                 voteRepository.findByUserIdAndTargetTypeAndTargetId(
@@ -60,7 +75,21 @@ public class VoteService {
             int downvoteDelta = request.voteType() == VoteType.DOWNVOTE ? 1 : 0;
 
             applyVoteDelta(request.targetType(), request.targetId(), upvoteDelta, downvoteDelta);
-
+            voteOutboxService.saveVoteChangedEvent(
+                    new VoteChangedEvent(
+                            UUID.randomUUID(),
+                            currentUserId,
+                            request.targetType().name(),
+                            request.targetId(),
+                            targetMetadata.ownerUserId(),
+                            targetMetadata.title(),
+                            null,
+                            request.voteType().name(),
+                            upvoteDelta,
+                            downvoteDelta,
+                            Instant.now()
+                    )
+            );
             return toResponse(savedVote);
         }
 
@@ -88,7 +117,21 @@ public class VoteService {
         }
 
         applyVoteDelta(request.targetType(), request.targetId(), upvoteDelta, downvoteDelta);
-
+        voteOutboxService.saveVoteChangedEvent(
+                new VoteChangedEvent(
+                        UUID.randomUUID(),
+                        currentUserId,
+                        request.targetType().name(),
+                        request.targetId(),
+                        targetMetadata.ownerUserId(),
+                        targetMetadata.title(),
+                        oldVoteType.name(),
+                        request.voteType().name(),
+                        upvoteDelta,
+                        downvoteDelta,
+                        Instant.now()
+                )
+        );
         return toResponse(savedVote);
     }
 
@@ -114,6 +157,21 @@ public class VoteService {
         int downvoteDelta = vote.getVoteType() == VoteType.DOWNVOTE ? -1 : 0;
 
         applyVoteDelta(targetType, targetId, upvoteDelta, downvoteDelta);
+        voteOutboxService.saveVoteChangedEvent(
+                new VoteChangedEvent(
+                        UUID.randomUUID(),
+                        currentUserId,
+                        targetType.name(),
+                        targetId,
+                        null,
+                        null,
+                        vote.getVoteType().name(),
+                        null,
+                        upvoteDelta,
+                        downvoteDelta,
+                        Instant.now()
+                )
+        );
     }
 
     public VoteStatusResponse getMyVoteStatus(
@@ -143,14 +201,47 @@ public class VoteService {
                 ));
     }
 
-    private void validateTargetExists(VoteTargetType targetType, UUID targetId) {
+    private String preview(String content) {
+        if (content == null || content.isBlank()) {
+            return "";
+        }
+
+        String normalized = content.trim();
+
+        if (normalized.length() <= 80) {
+            return normalized;
+        }
+
+        return normalized.substring(0, 80) + "...";
+    }
+
+    private TargetMetadata getTargetMetadata(VoteTargetType targetType, UUID targetId) {
         try {
             if (targetType == VoteTargetType.POST) {
-                postTargetClient.validatePostExists(targetId);
-            } else if (targetType == VoteTargetType.COMMENT) {
-                commentTargetClient.validateCommentExists(targetId);
+                PostResponse post = postTargetClient.getPost(targetId);
+
+                return new TargetMetadata(
+                        post.authorUserId(),
+                        post.title()
+                );
             }
-        } catch (RestClientException ex) {
+
+            if (targetType == VoteTargetType.COMMENT) {
+                CommentResponse comment = commentTargetClient.getComment(targetId);
+
+                return new TargetMetadata(
+                        comment.authorUserId(),
+                        preview(comment.content())
+                );
+            }
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Unsupported target type"
+            );
+        } catch (ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception ex) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Target does not exist or target service is unavailable"
